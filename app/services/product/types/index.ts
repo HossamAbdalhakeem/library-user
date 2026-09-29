@@ -1,0 +1,15 @@
+export type {
+  NamedRef,
+  AcademicYearRef,
+  ProductType,
+  ProductStatus,
+  ProductAvailabilityStatus,
+  ProductResponse,
+  ProductSearchBranch,
+  ProductSearchResponse,
+  ProductQuery,
+  ProductSearchQuery,
+  ProductPayload,
+  ProductUpdatePayload,
+  ProductListItem,
+} from "./product.types";

@@ -1,0 +1,11 @@
+---
+description: Public catalog has no staff auth
+globs: app/pages/**/*.vue
+alwaysApply: false
+---
+# Auth & routing
+
+This app is the public reservation catalog. There is no staff login, no role layout, and no auth middleware.
+
+- Home is `/` and uses the `public` layout.
+- Catalog calls go through `publicReservationApi` (`/app-api`), which stays on the public allowlist in `apiFetch`.

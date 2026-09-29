@@ -1,0 +1,49 @@
+---
+description: Vue/Nuxt component and page conventions
+globs: app/components/**/*.vue,app/pages/**/*.vue,app/layouts/**/*.vue
+alwaysApply: false
+---
+# Components & pages
+
+## Thin pages
+
+Pages only mount a feature entry — put UI in `components/pages/<feature>/`:
+
+```vue
+<!-- ✅ app/pages/index.vue -->
+<template>
+  <UserReservationsPageIndex />
+</template>
+<script setup>
+import UserReservationsPageIndex from "~/components/pages/user-reservations/UserReservationsPageIndex.vue";
+definePageMeta({ layout: "public" });
+</script>
+```
+
+## Naming
+
+| Kind | Pattern | Example |
+|------|---------|---------|
+| Shared reusable | kebab folder + `index.vue` | [`shared/dialog/reservation-success-dialog/`](mdc:app/components/shared/dialog/reservation-success-dialog/index.vue) |
+| Feature page shell | PascalCase `*PageIndex.vue` | `UsersPageIndex.vue` |
+| Feature form/table/dialog | PascalCase `.vue` under feature tree | `UserForm.vue`, `SalesSuccessDialog.vue` |
+
+## Script patterns
+
+- Always `<script setup>` (no Options API components)
+- Prefer `defineOptions({ name: "PascalCaseName" })` (common on shared; not universal)
+- Dialogs: `visible` prop + `update:visible` / `close` emits
+- Import PrimeVue pieces explicitly (`Dialog`, `Button`, …)
+- Style with **Tailwind** first; scoped CSS only when needed (see `app-data-table`)
+
+## Placement
+
+- Reusable across features → [`app/components/shared/`](mdc:app/components/shared/) (usually kebab + `index.vue`; some report shells use PascalCase folders e.g. `ReportsSummaryCards/`)
+- Feature-only → [`app/components/pages/<feature>/`](mdc:app/components/pages/user-reservations/)
+- Layout chrome → [`app/layouts/`](mdc:app/layouts/)
+- [`app/pages/index.vue`](mdc:app/pages/index.vue) mounts `UserReservationsPageIndex`
+
+```vue
+<!-- ❌ Don’t put large feature UI in pages/ -->
+<!-- ❌ Don’t use v-html / innerHTML -->
+```
