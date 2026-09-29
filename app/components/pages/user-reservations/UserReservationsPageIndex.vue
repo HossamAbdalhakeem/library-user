@@ -95,11 +95,18 @@ const teacherId = ref(null);
 const studyYearId = ref(null);
 const branchId = ref(null);
 const productType = ref(null);
+const teachers = ref([]);
+const studyYears = ref([]);
+const branches = ref([]);
+const productTypes = ref([]);
 const PAGE_SIZE = 15;
 
+const filtersLoading = ref(false);
+const loading = ref(false);
 const loadingMore = ref(false);
 const page = ref(1);
-const extraRows = ref([]);
+const total = ref(0);
+const products = ref([]);
 const wizardVisible = ref(false);
 const selectedProduct = ref(null);
 
@@ -108,6 +115,8 @@ const filtersActive = computed(() => hasActiveFilters());
 const emptyMessage = computed(() =>
   filtersActive.value ? "لا توجد منتجات مطابقة" : "لا توجد منتجات متاحة للحجز."
 );
+
+const hasMore = computed(() => products.value.length < total.value);
 
 const hasActiveFilters = () =>
   Boolean(
@@ -118,10 +127,10 @@ const hasActiveFilters = () =>
       productType.value
   );
 
-const buildQuery = (pageNumber = 1) => {
+const buildQuery = () => {
   const product = String(search.value || "").trim();
   return {
-    page: pageNumber,
+    page: page.value,
     per_page: PAGE_SIZE,
     ...(product ? { product } : {}),
     ...(teacherId.value ? { teacherId: teacherId.value } : {}),
@@ -131,75 +140,70 @@ const buildQuery = (pageNumber = 1) => {
   };
 };
 
-const { data: filterPayload, pending: filtersLoading } = await useAsyncData(
-  "public-reservation-filters",
-  async () => {
-    const [teacherResult, yearResult, branchResult, typeResult] =
-      await Promise.allSettled([
-        publicReservationApi.getTeachers(),
-        publicReservationApi.getStudyYears(),
-        publicReservationApi.getBranches(),
-        publicReservationApi.getProductTypes(),
-      ]);
+const loadFilters = async () => {
+  filtersLoading.value = true;
+  const [teacherResult, yearResult, branchResult, typeResult] =
+    await Promise.allSettled([
+      publicReservationApi.getTeachers(),
+      publicReservationApi.getStudyYears(),
+      publicReservationApi.getBranches(),
+      publicReservationApi.getProductTypes(),
+    ]);
 
-    const failed = [teacherResult, yearResult, branchResult, typeResult].find(
-      (result) => result.status === "rejected"
-    );
-
-    return {
-      teachers:
-        teacherResult.status === "fulfilled" ? teacherResult.value || [] : [],
-      studyYears:
-        yearResult.status === "fulfilled" ? yearResult.value || [] : [],
-      branches:
-        branchResult.status === "fulfilled" ? branchResult.value || [] : [],
-      productTypes:
-        typeResult.status === "fulfilled"
-          ? (typeResult.value || []).map((item) => ({
-              value: item.value,
-              label: getProductTypeLabel(item.value),
-            }))
-          : [],
-      errorMessage: failed
-        ? failed.reason?.message || "تعذر تحميل خيارات التصفية."
-        : "",
-    };
+  if (teacherResult.status === "fulfilled") {
+    teachers.value = teacherResult.value || [];
   }
-);
+  if (yearResult.status === "fulfilled") {
+    studyYears.value = yearResult.value || [];
+  }
+  if (branchResult.status === "fulfilled") {
+    branches.value = branchResult.value || [];
+  }
+  if (typeResult.status === "fulfilled") {
+    productTypes.value = (typeResult.value || []).map((item) => ({
+      value: item.value,
+      label: getProductTypeLabel(item.value),
+    }));
+  }
 
-const {
-  data: catalog,
-  pending: loading,
-  error: productsError,
-  refresh: refreshCatalog,
-} = await useAsyncData("public-reservation-products", () =>
-  publicReservationApi.searchProducts(buildQuery(1))
-);
+  const failed = [teacherResult, yearResult, branchResult, typeResult].some(
+    (result) => result.status === "rejected",
+  );
+  if (failed) {
+    const reason = [teacherResult, yearResult, branchResult, typeResult].find(
+      (result) => result.status === "rejected",
+    );
+    showError(reason?.reason?.message || "تعذر تحميل خيارات التصفية.");
+  }
+  filtersLoading.value = false;
+};
 
-const teachers = computed(() => filterPayload.value?.teachers || []);
-const studyYears = computed(() => filterPayload.value?.studyYears || []);
-const branches = computed(() => filterPayload.value?.branches || []);
-const productTypes = computed(() => filterPayload.value?.productTypes || []);
+const loadProducts = async ({ append = false } = {}) => {
+  if (append) loadingMore.value = true;
+  else {
+    loading.value = true;
+    page.value = 1;
+  }
 
-const products = computed(() => {
-  const rows = (catalog.value?.data || []).map(normalizeBookSearchItem);
-  return rows.concat(extraRows.value);
-});
-
-const total = computed(() =>
-  Number(catalog.value?.pagination?.total ?? products.value.length)
-);
-
-const hasMore = computed(() => products.value.length < total.value);
-
-const reloadProducts = async () => {
-  page.value = 1;
-  extraRows.value = [];
-  await refreshCatalog();
-  if (import.meta.client && productsError.value) {
-    showError(productsError.value?.message || "تعذر تحميل المنتجات.");
+  try {
+    const result = await publicReservationApi.searchProducts(buildQuery());
+    const rows = (result?.data || []).map(normalizeBookSearchItem);
+    products.value = append ? products.value.concat(rows) : rows;
+    total.value = Number(result?.pagination?.total ?? rows.length);
+  } catch (error) {
+    if (append) page.value = Math.max(1, page.value - 1);
+    else {
+      products.value = [];
+      total.value = 0;
+    }
+    showError(error?.message || "تعذر تحميل المنتجات.");
+  } finally {
+    loading.value = false;
+    loadingMore.value = false;
   }
 };
+
+const reloadProducts = () => loadProducts();
 
 const clearFilters = () => {
   search.value = "";
@@ -207,30 +211,18 @@ const clearFilters = () => {
   studyYearId.value = null;
   branchId.value = null;
   productType.value = null;
-  reloadProducts();
+  loadProducts();
 };
 
-const loadMore = async () => {
+const loadMore = () => {
   if (!hasMore.value || loading.value || loadingMore.value) return;
-  const nextPage = page.value + 1;
-  loadingMore.value = true;
-  try {
-    const result = await publicReservationApi.searchProducts(
-      buildQuery(nextPage)
-    );
-    const rows = (result?.data || []).map(normalizeBookSearchItem);
-    extraRows.value = extraRows.value.concat(rows);
-    page.value = nextPage;
-  } catch (error) {
-    showError(error?.message || "تعذر تحميل المنتجات.");
-  } finally {
-    loadingMore.value = false;
-  }
+  page.value += 1;
+  loadProducts({ append: true });
 };
 
 const onSearch = (term) => {
   search.value = String(term ?? "");
-  reloadProducts();
+  loadProducts();
 };
 
 const openWizard = (product) => {
@@ -244,11 +236,7 @@ const onSubmitted = () => {
 };
 
 onMounted(() => {
-  if (filterPayload.value?.errorMessage) {
-    showError(filterPayload.value.errorMessage);
-  }
-  if (productsError.value) {
-    showError(productsError.value?.message || "تعذر تحميل المنتجات.");
-  }
+  loadFilters();
+  loadProducts();
 });
 </script>
