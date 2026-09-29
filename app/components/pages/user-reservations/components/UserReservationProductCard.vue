@@ -13,7 +13,6 @@
         alt=""
         class="catalog-card__photo absolute inset-0 h-full w-full object-cover"
       />
-      <span class="catalog-card__shine" aria-hidden="true" />
     </div>
 
     <div class="flex flex-1 flex-col gap-3 p-4">
@@ -135,25 +134,6 @@ const emptyAvailability = computed(() =>
 .catalog-card:hover .catalog-card__photo,
 .catalog-card:focus-visible .catalog-card__photo {
   transform: scale(1) translate3d(-3%, 0, 0);
-}
-
-.catalog-card__shine {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    115deg,
-    transparent 30%,
-    color-mix(in srgb, white 38%, transparent) 48%,
-    transparent 62%
-  );
-  transform: translateX(130%);
-  transition: transform 720ms cubic-bezier(0.22, 1, 0.36, 1);
-  pointer-events: none;
-}
-
-.catalog-card:hover .catalog-card__shine,
-.catalog-card:focus-visible .catalog-card__shine {
-  transform: translateX(-130%);
 }
 
 .catalog-card__branches {

@@ -28,11 +28,7 @@
         />
 
         <div v-if="loading" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <div
-            v-for="index in 6"
-            :key="index"
-            class="h-72 animate-pulse rounded-2xl border border-[var(--app-border)] bg-[var(--app-elevated)]"
-          />
+          <UserReservationProductCardSkeleton v-for="index in 6" :key="index" />
         </div>
 
         <p
@@ -85,6 +81,7 @@ import { normalizeBookSearchItem } from "~/services/book";
 import { getProductTypeLabel } from "~/enums/productType";
 import { useAppToast } from "~/composables/useAppToast";
 import UserReservationFilters from "./components/UserReservationFilters.vue";
+import UserReservationProductCardSkeleton from "./components/UserReservationProductCardSkeleton.vue";
 import UserReservationWizardDialog from "./components/UserReservationWizardDialog.vue";
 import UserReservationProductCard from "./components/UserReservationProductCard.vue";
 import UserReservationsHeader from "~/components/pages/user-reservations/components/partials/UserReservationsHeader.vue";
