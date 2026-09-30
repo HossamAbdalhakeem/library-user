@@ -18,7 +18,7 @@ DAST needs a reachable URL:
 ```bash
 NUXT_PUBLIC_SITE_URL=https://your-frontend.example.com npm run security:dast
 # or
-npm run security:dast -- http://localhost:8001
+npm run security:dast -- http://localhost:8000
 ```
 
 CI runs SCA + SAST on every PR. DAST runs on schedule / manual workflow dispatch.

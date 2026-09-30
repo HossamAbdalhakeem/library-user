@@ -117,8 +117,9 @@ export default defineNuxtConfig({
     allow: ['/'],
   },
 
+  // API CORS allowlist includes http://localhost:8000 only.
   devServer: {
-    port: 8001,
+    port: 8000,
   },
 
   runtimeConfig: {

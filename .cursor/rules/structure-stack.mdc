@@ -3,7 +3,7 @@ alwaysApply: true
 ---
 # Project structure & stack
 
-Nuxt 4 **SSR** (`ssr: true`) public catalog. App code lives under [`app/`](mdc:app/). The only page is `/` (product reservation). Dev server port is **8001**.
+Nuxt 4 **SSR** (`ssr: true`) public catalog. App code lives under [`app/`](mdc:app/). The only page is `/` (product reservation). Dev server port is **8000**.
 
 ## Layout
 
