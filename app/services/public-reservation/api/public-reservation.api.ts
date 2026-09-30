@@ -62,6 +62,9 @@ export class PublicReservationCrud {
     });
   }
 
+// https://library-management-backend-production-3798.up.railway.app/app-api/products/search?page=1&per_page=15
+  
+// https://library-management-backend-production-3798.up.railway.app/app-api/product-types
   /** GET /app-api/teachers */
   static getTeachers(params = {}) {
     return call({

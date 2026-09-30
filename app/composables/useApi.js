@@ -11,8 +11,7 @@
  *   { endpoint, method, params, body, headers, cache }
  *
  * This catalog is public: no auth token and no organization id.
- * On the client, baseURL stays empty so the browser calls this app
- * and Nitro proxies /app-api (the API CORS list does not include port 8001).
+ * baseURL is runtimeConfig.public.baseUrl (NUXT_ENV_BASE_URL).
  */
 export const useApi = () => {
   const config = useRuntimeConfig();
@@ -38,10 +37,6 @@ export const useApi = () => {
       JSON.stringify(body || {}),
     ].join("-");
 
-    const origin = String(config.public.baseUrl || "")
-      .trim()
-      .replace(/\/$/, "");
-
     // NOT async on purpose: useFetch returns live refs immediately,
     // so `loading` stays reactive (true while the request is in flight).
     // Nuxt still waits for non-lazy useFetch during SSR before rendering.
@@ -51,7 +46,7 @@ export const useApi = () => {
       params: requestParams,
       headers: requestHeaders,
       ...(body !== undefined ? { body } : {}),
-      ...(import.meta.client || !origin ? {} : { baseURL: origin }),
+      baseURL: config.public.baseUrl,
       // When the same key is requested twice while a request is still in
       // flight, Nuxt's default dedupe mode "cancel" aborts the in-flight
       // request. "defer" shares that single request between callers.

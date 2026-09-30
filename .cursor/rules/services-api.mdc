@@ -24,7 +24,7 @@ index.ts          # re-export api + types + helpers
 - Later calls (filters, next page, submit) go through `nuxtApp.runWithContext(() => Crud.method(...))`
 - Pass `cache: false` when the same payload must hit the network again (creates, explicit reloads)
 - Public catalog paths stay `/app-api`. This app has no auth token and does not send `organization_id`
-- Client requests use a relative URL so Nitro proxies `/app-api`. Server requests use `runtimeConfig.public.baseUrl`
+- `useApi` sets `baseURL` from `runtimeConfig.public.baseUrl` (`NUXT_ENV_BASE_URL`) on the client and the server
 
 ```ts
 // ✅

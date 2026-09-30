@@ -56,32 +56,6 @@ const BlackAura = definePreset(Aura, {
 
 const isDev = process.env.NODE_ENV === 'development';
 
-/** NestJS API origin used for connect-src / img-src (env-specific; never bake localhost into prod). */
-const apiBaseUrl =
-  process.env.NUXT_ENV_BASE_URL || 'http://localhost:3000';
-
-const toOrigin = (value: string) => {
-  try {
-    return new URL(value).origin;
-  } catch {
-    return value.replace(/\/$/, '');
-  }
-};
-
-const apiOrigin = toOrigin(apiBaseUrl);
-
-const connectSrc = ["'self'", apiOrigin];
-if (isDev) {
-  // Vite HMR websockets on the Nuxt dev server
-  connectSrc.push('ws:', 'wss:');
-}
-
-const scriptSrc = ["'self'", "'unsafe-inline'"];
-if (isDev) {
-  // Vite transform pipeline requires eval in development
-  scriptSrc.push("'unsafe-eval'");
-}
-
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   modules: [
@@ -131,17 +105,12 @@ export default defineNuxtConfig({
     },
   },
   ssr: true,
-  // Browser calls stay same-origin. The API CORS allowlist currently includes
-  // the admin dev port (8000) and not this app (8001).
-  routeRules: {
-    '/app-api/**': { proxy: `${apiOrigin}/app-api/**` },
-  },
   devtools: { enabled: true },
   compatibilityDate: '2024-04-03',
 
   // Site config used by @nuxtjs/robots and @nuxtjs/sitemap.
   site: {
-    url: process.env.NUXT_PUBLIC_SITE_URL || 'http://localhost:8001',
+    url: process.env.NUXT_PUBLIC_SITE_URL,
   },
   // Public catalog: crawlers may index every page.
   robots: {
@@ -154,8 +123,8 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     public: {
-      baseUrl: apiBaseUrl,
-      siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'http://localhost:8001',
+      baseUrl: process.env.NUXT_ENV_BASE_URL,
+      siteUrl: process.env.NUXT_PUBLIC_SITE_URL,
       paymentScreenshotMaxBytes: Number(
         process.env.NUXT_PUBLIC_PAYMENT_SCREENSHOT_MAX_BYTES || 409600,
       ),
@@ -182,11 +151,11 @@ export default defineNuxtConfig({
         'frame-src': ["'none'"],
         'object-src': ["'none'"],
         'media-src': ["'self'", 'blob:', 'data:'],
-        'img-src': ["'self'", 'data:', 'blob:', apiOrigin, 'https:'],
+        'img-src': ["'self'", 'data:', 'blob:', 'https:'],
         'style-src': ["'self'", "'unsafe-inline'"],
-        'script-src': scriptSrc,
+        'script-src': ["'self'", "'unsafe-inline'", ...(isDev ? ["'unsafe-eval'"] : [])],
         'script-src-attr': ["'none'"],
-        'connect-src': connectSrc,
+        'connect-src': ["'self'", process.env.NUXT_ENV_BASE_URL, ...(isDev ? ['ws:', 'wss:'] : [])].filter(Boolean),
         'worker-src': ["'self'", 'blob:'],
         'upgrade-insecure-requests': !isDev,
       },
