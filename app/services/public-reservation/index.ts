@@ -1,4 +1,8 @@
-export { publicReservationApi } from "./api/public-reservation.api";
+export {
+  PublicReservationCrud,
+  readData,
+  readList,
+} from "./api/public-reservation.api";
 export type {
   AppCatalogOption,
   AppProductTypeOption,

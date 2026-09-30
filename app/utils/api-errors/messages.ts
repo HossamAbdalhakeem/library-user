@@ -206,3 +206,28 @@ export const resolveApiErrorMessage = (
   }
   return fallback || "حدث خطأ. حاول مرة أخرى.";
 };
+
+const rawMessage = (body: any): string => {
+  const message = body?.message;
+  if (typeof message === "string") return message;
+  if (Array.isArray(message)) return message.join(", ");
+  if (message && typeof message === "object") {
+    if (typeof message.message === "string") return message.message;
+    if (Array.isArray(message.message)) return message.message.join(", ");
+  }
+  return "";
+};
+
+/** Arabic message from a useFetch error ref value. */
+export const messageFromFetchError = (error: any, fallback?: string) => {
+  const body = error?.data || error;
+  const code = body?.code || body?.error;
+  const text =
+    rawMessage(body) ||
+    (typeof error?.message === "string" ? error.message : "") ||
+    fallback;
+  return resolveApiErrorMessage(
+    typeof code === "string" ? code : undefined,
+    text || fallback,
+  );
+};

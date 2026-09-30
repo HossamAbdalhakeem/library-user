@@ -71,7 +71,12 @@
 import Dialog from "primevue/dialog";
 import Steps from "primevue/steps";
 import { PaymentMethod, getPaymentMethodLabel } from "~/enums/paymentMethod";
-import { publicReservationApi } from "~/services/public-reservation";
+import {
+  PublicReservationCrud,
+  readData,
+  readList,
+} from "~/services/public-reservation";
+import { messageFromFetchError } from "~/utils/api-errors/messages";
 import { formatMoney } from "~/utils/format/money";
 import UserReservationBranchPaymentStep from "./partials/UserReservationBranchPaymentStep.vue";
 import UserReservationProductSummary from "./partials/UserReservationProductSummary.vue";
@@ -95,12 +100,19 @@ const steps = [
   { label: "المراجعة" },
 ];
 
+const nuxtApp = useNuxtApp();
 const activeStep = ref(0);
 const submitting = ref(false);
 const formError = ref("");
 const success = ref(null);
-const studyYears = ref([]);
-const studyYearsLoading = ref(false);
+
+const {
+  data: studyYearsData,
+  loading: studyYearsLoading,
+  error: studyYearsError,
+} = PublicReservationCrud.getStudyYears();
+
+const studyYears = computed(() => readList(studyYearsData.value));
 
 const branchId = ref(null);
 const quantity = ref(1);
@@ -167,24 +179,17 @@ const resetForm = () => {
   studyYearId.value = props.product?.studyYear?.id || null;
 };
 
-const loadStudyYears = async () => {
-  if (studyYears.value.length) return;
-  studyYearsLoading.value = true;
-  try {
-    studyYears.value = await publicReservationApi.getStudyYears();
-  } catch (error) {
-    formError.value = error?.message || "تعذر تحميل السنوات الدراسية.";
-  } finally {
-    studyYearsLoading.value = false;
-  }
-};
-
 watch(
   () => props.visible,
   (open) => {
     if (!open) return;
     resetForm();
-    loadStudyYears();
+    if (studyYearsError.value) {
+      formError.value = messageFromFetchError(
+        studyYearsError.value,
+        "تعذر تحميل السنوات الدراسية.",
+      );
+    }
   },
 );
 
@@ -249,15 +254,25 @@ const submit = async () => {
   submitting.value = true;
   formError.value = "";
   try {
-    const created = await publicReservationApi.createReservation({
-      name: name.value.trim(),
-      phone: phone.value.trim(),
-      studyYearId: studyYearId.value,
-      productId: props.product.id,
-      branchId: branchId.value,
-      quantity: Number(quantity.value),
-      deposit: Number(deposit.value),
-    });
+    const { data, error } = await nuxtApp.runWithContext(() =>
+      PublicReservationCrud.createReservation({
+        name: name.value.trim(),
+        phone: phone.value.trim(),
+        studyYearId: studyYearId.value,
+        productId: props.product.id,
+        branchId: branchId.value,
+        quantity: Number(quantity.value),
+        deposit: Number(deposit.value),
+      }),
+    );
+    if (error.value) {
+      formError.value = messageFromFetchError(
+        error.value,
+        "تعذر إرسال طلب الحجز.",
+      );
+      return;
+    }
+    const created = readData(data.value);
     success.value = {
       reservationNumber: created?.reservationNumber || "—",
       productName: props.product.name,
@@ -266,7 +281,7 @@ const submit = async () => {
       methodLabel: getPaymentMethodLabel(method.value),
     };
   } catch (error) {
-    formError.value = error?.message || "تعذر إرسال طلب الحجز.";
+    formError.value = messageFromFetchError(error, "تعذر إرسال طلب الحجز.");
   } finally {
     submitting.value = false;
   }

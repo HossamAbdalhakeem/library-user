@@ -76,10 +76,14 @@
 
 <script setup>
 import Button from "primevue/button";
-import { publicReservationApi } from "~/services/public-reservation";
+import {
+  PublicReservationCrud,
+  readList,
+} from "~/services/public-reservation";
 import { normalizeBookSearchItem } from "~/services/book";
 import { getProductTypeLabel } from "~/enums/productType";
 import { useAppToast } from "~/composables/useAppToast";
+import { messageFromFetchError } from "~/utils/api-errors/messages";
 import UserReservationFilters from "./components/UserReservationFilters.vue";
 import UserReservationProductCardSkeleton from "./components/UserReservationProductCardSkeleton.vue";
 import UserReservationWizardDialog from "./components/UserReservationWizardDialog.vue";
@@ -90,25 +94,82 @@ import UserReservationsHero from "~/components/pages/user-reservations/component
 defineOptions({ name: "UserReservationsPageIndex" });
 
 const { showError } = useAppToast();
+const nuxtApp = useNuxtApp();
 const search = ref("");
 const teacherId = ref(null);
 const studyYearId = ref(null);
 const branchId = ref(null);
 const productType = ref(null);
-const teachers = ref([]);
-const studyYears = ref([]);
-const branches = ref([]);
-const productTypes = ref([]);
 const PAGE_SIZE = 15;
 
-const filtersLoading = ref(false);
-const loading = ref(false);
 const loadingMore = ref(false);
+const reloading = ref(false);
 const page = ref(1);
-const total = ref(0);
-const products = ref([]);
+const listOverride = ref(null);
+const moreProducts = ref([]);
 const wizardVisible = ref(false);
 const selectedProduct = ref(null);
+
+// No await => loading stays reactive. Nuxt waits for these during SSR.
+const {
+  data: teachersData,
+  loading: teachersLoading,
+  error: teachersError,
+} = PublicReservationCrud.getTeachers();
+const {
+  data: studyYearsData,
+  loading: studyYearsLoading,
+  error: studyYearsError,
+} = PublicReservationCrud.getStudyYears();
+const {
+  data: branchesData,
+  loading: branchesLoading,
+  error: branchesError,
+} = PublicReservationCrud.getBranches();
+const {
+  data: productTypesData,
+  loading: productTypesLoading,
+  error: productTypesError,
+} = PublicReservationCrud.getProductTypes();
+const {
+  data: productsData,
+  loading: productsLoading,
+  error: productsError,
+} = PublicReservationCrud.searchProducts({
+  page: 1,
+  per_page: PAGE_SIZE,
+});
+
+const teachers = computed(() => readList(teachersData.value));
+const studyYears = computed(() => readList(studyYearsData.value));
+const branches = computed(() => readList(branchesData.value));
+const productTypes = computed(() =>
+  readList(productTypesData.value).map((item) => ({
+    value: item.value,
+    label: getProductTypeLabel(item.value),
+  })),
+);
+
+const filtersLoading = computed(
+  () =>
+    teachersLoading.value ||
+    studyYearsLoading.value ||
+    branchesLoading.value ||
+    productTypesLoading.value,
+);
+
+const loading = computed(() => productsLoading.value || reloading.value);
+
+const activePayload = computed(() => listOverride.value ?? productsData.value);
+
+const products = computed(() => {
+  const firstPage = readList(activePayload.value).map(normalizeBookSearchItem);
+  return firstPage.concat(moreProducts.value);
+});
+
+const total = computed(() =>
+  Number(activePayload.value?.pagination?.total ?? products.value.length),
+);
 
 const filtersActive = computed(() => hasActiveFilters());
 
@@ -127,10 +188,10 @@ const hasActiveFilters = () =>
       productType.value
   );
 
-const buildQuery = () => {
+const buildQuery = (pageNumber = 1) => {
   const product = String(search.value || "").trim();
   return {
-    page: page.value,
+    page: pageNumber,
     per_page: PAGE_SIZE,
     ...(product ? { product } : {}),
     ...(teacherId.value ? { teacherId: teacherId.value } : {}),
@@ -140,70 +201,49 @@ const buildQuery = () => {
   };
 };
 
-const loadFilters = async () => {
-  filtersLoading.value = true;
-  const [teacherResult, yearResult, branchResult, typeResult] =
-    await Promise.allSettled([
-      publicReservationApi.getTeachers(),
-      publicReservationApi.getStudyYears(),
-      publicReservationApi.getBranches(),
-      publicReservationApi.getProductTypes(),
-    ]);
+let filtersErrorReported = false;
 
-  if (teacherResult.status === "fulfilled") {
-    teachers.value = teacherResult.value || [];
-  }
-  if (yearResult.status === "fulfilled") {
-    studyYears.value = yearResult.value || [];
-  }
-  if (branchResult.status === "fulfilled") {
-    branches.value = branchResult.value || [];
-  }
-  if (typeResult.status === "fulfilled") {
-    productTypes.value = (typeResult.value || []).map((item) => ({
-      value: item.value,
-      label: getProductTypeLabel(item.value),
-    }));
-  }
+watch(
+  [teachersError, studyYearsError, branchesError, productTypesError],
+  (errors) => {
+    const error = errors.find(Boolean);
+    if (!import.meta.client || !error || filtersErrorReported) return;
+    filtersErrorReported = true;
+    showError(messageFromFetchError(error, "تعذر تحميل خيارات التصفية."));
+  },
+  { immediate: true },
+);
 
-  const failed = [teacherResult, yearResult, branchResult, typeResult].some(
-    (result) => result.status === "rejected",
-  );
-  if (failed) {
-    const reason = [teacherResult, yearResult, branchResult, typeResult].find(
-      (result) => result.status === "rejected",
-    );
-    showError(reason?.reason?.message || "تعذر تحميل خيارات التصفية.");
-  }
-  filtersLoading.value = false;
-};
+watch(
+  productsError,
+  (error) => {
+    if (!import.meta.client || !error || listOverride.value) return;
+    showError(messageFromFetchError(error, "تعذر تحميل المنتجات."));
+  },
+  { immediate: true },
+);
 
-const loadProducts = async ({ append = false } = {}) => {
-  if (append) loadingMore.value = true;
-  else {
-    loading.value = true;
-    page.value = 1;
-  }
-
+const reloadProducts = async () => {
+  page.value = 1;
+  moreProducts.value = [];
+  reloading.value = true;
   try {
-    const result = await publicReservationApi.searchProducts(buildQuery());
-    const rows = (result?.data || []).map(normalizeBookSearchItem);
-    products.value = append ? products.value.concat(rows) : rows;
-    total.value = Number(result?.pagination?.total ?? rows.length);
-  } catch (error) {
-    if (append) page.value = Math.max(1, page.value - 1);
-    else {
-      products.value = [];
-      total.value = 0;
+    const { data, error } = await nuxtApp.runWithContext(() =>
+      PublicReservationCrud.searchProducts(buildQuery(1), { cache: false }),
+    );
+    if (error.value) {
+      listOverride.value = { data: [], pagination: { total: 0 } };
+      showError(messageFromFetchError(error.value, "تعذر تحميل المنتجات."));
+      return;
     }
-    showError(error?.message || "تعذر تحميل المنتجات.");
+    listOverride.value = data.value;
+  } catch (error) {
+    listOverride.value = { data: [], pagination: { total: 0 } };
+    showError(messageFromFetchError(error, "تعذر تحميل المنتجات."));
   } finally {
-    loading.value = false;
-    loadingMore.value = false;
+    reloading.value = false;
   }
 };
-
-const reloadProducts = () => loadProducts();
 
 const clearFilters = () => {
   search.value = "";
@@ -211,18 +251,35 @@ const clearFilters = () => {
   studyYearId.value = null;
   branchId.value = null;
   productType.value = null;
-  loadProducts();
+  reloadProducts();
 };
 
-const loadMore = () => {
+const loadMore = async () => {
   if (!hasMore.value || loading.value || loadingMore.value) return;
-  page.value += 1;
-  loadProducts({ append: true });
+  loadingMore.value = true;
+  const nextPage = page.value + 1;
+  try {
+    const { data, error } = await nuxtApp.runWithContext(() =>
+      PublicReservationCrud.searchProducts(buildQuery(nextPage)),
+    );
+    if (error.value) {
+      showError(messageFromFetchError(error.value, "تعذر تحميل المنتجات."));
+      return;
+    }
+    const rows = readList(data.value).map(normalizeBookSearchItem);
+    if (!rows.length) return;
+    page.value = nextPage;
+    moreProducts.value = moreProducts.value.concat(rows);
+  } catch (error) {
+    showError(messageFromFetchError(error, "تعذر تحميل المنتجات."));
+  } finally {
+    loadingMore.value = false;
+  }
 };
 
 const onSearch = (term) => {
   search.value = String(term ?? "");
-  loadProducts();
+  reloadProducts();
 };
 
 const openWizard = (product) => {
@@ -234,9 +291,4 @@ const openWizard = (product) => {
 const onSubmitted = () => {
   selectedProduct.value = null;
 };
-
-onMounted(() => {
-  loadFilters();
-  loadProducts();
-});
 </script>

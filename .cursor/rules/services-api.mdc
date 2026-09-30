@@ -1,6 +1,6 @@
 ---
-description: Domain services and apiFetch HTTP conventions
-globs: app/services/**/*,app/utils/apiFetch.ts
+description: Domain services and useApi HTTP conventions
+globs: app/services/**/*,app/composables/useApi.js
 alwaysApply: false
 ---
 # Services & API
@@ -10,35 +10,40 @@ alwaysApply: false
 Each domain under [`app/services/<domain>/`](mdc:app/services/):
 
 ```
-api/*.api.ts      # HTTP via apiFetch (auth uses authFetch)
+api/*.api.ts      # CRUD class, requests via useApi
 types/*.types.ts  # + types/index.ts
 helpers/*.helper.js
 index.ts          # re-export api + types + helpers
 ```
 
-Reports nest further: `services/reports/{admin|branch|shared}/`.  
-Example barrel: [`app/services/user/index.ts`](mdc:app/services/user/index.ts).
-
 ## Calling the API
 
-- Use [`apiFetch`](mdc:app/utils/apiFetch.ts) / helpers `asList`, `asData`, `asPaginated`, `firstRow`
-- Do **not** raw-`$fetch` the Nest API from components — go through `*Api` modules
-- Auth: Bearer token from localStorage (handled in `apiFetch`); public allowlist includes `/admin-api/auth/login`
-- Staff paths are written with the `/admin-api` prefix in each `*Api` module. Public catalog calls keep `/app-api`. `apiFetch` does not rewrite paths
-- `academicYearId` query is attached automatically when stored
-- [`useApi.js`](mdc:app/composables/useApi.js) exists but is unused — prefer `*Api` + `apiFetch`, do not revive it for new work
+- Use [`useApi`](mdc:app/composables/useApi.js) from a CRUD class. `useFetch` runs in component setup and returns `{ data, loading, error }`
+- Do **not** use `$fetch` / `apiFetch` for Nest API calls
+- Call CRUD methods during `<script setup>` with no `await`, so `loading` stays reactive and SSR waits for the request
+- Later calls (filters, next page, submit) go through `nuxtApp.runWithContext(() => Crud.method(...))`
+- Pass `cache: false` when the same payload must hit the network again (creates, explicit reloads)
+- Public catalog paths stay `/app-api`. This app has no auth token and does not send `organization_id`
+- Client requests use a relative URL so Nitro proxies `/app-api`. Server requests use `runtimeConfig.public.baseUrl`
 
 ```ts
 // ✅
-export const userApi = {
-  async getUsers(params: UserQuery = {}): Promise<UserResponse[]> {
-    return asList<UserResponse>(
-      await apiFetch("/admin-api/users", { method: "GET", params }),
-    );
-  },
-};
+export class TeachersCrud {
+  static get(params = {}) {
+    const { request } = useApi();
+    const { data, pending, error, ...rest } = request({
+      endpoint: "/app-api/teachers",
+      method: "GET",
+      params,
+    });
+    return { data, error, loading: pending, ...rest };
+  }
+}
 
-// ❌ fetch/axios directly, or duplicate Authorization headers in every call
+// component setup
+const { data, loading, error } = TeachersCrud.get();
+
+// ❌ await $fetch / apiFetch inside onMounted
 ```
 
 ## Helpers vs UI
