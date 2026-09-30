@@ -28,13 +28,16 @@ export const useApi = () => {
     const requestHeaders = { ...headers };
     const requestParams = { ...params };
 
-    // Stable key => client reuses the SSR payload instead of re-fetching
+    // Stable key => client reuses the SSR payload instead of re-fetching.
+    // cache: false must be a new key: useFetch will not run again when an
+    // existing key is already "success", even if getCachedData returns nothing.
     const key = [
       "api",
       method,
       endpoint,
       JSON.stringify(requestParams || {}),
       JSON.stringify(body || {}),
+      requestConfig.cache === false ? `fresh-${Date.now()}` : "cached",
     ].join("-");
 
     // NOT async on purpose: useFetch returns live refs immediately,

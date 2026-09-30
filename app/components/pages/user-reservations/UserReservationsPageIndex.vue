@@ -76,10 +76,7 @@
 
 <script setup>
 import Button from "primevue/button";
-import {
-  PublicReservationCrud,
-  readList,
-} from "~/services/public-reservation";
+import { PublicReservationCrud, readList } from "~/services/public-reservation";
 import { normalizeBookSearchItem } from "~/services/book";
 import { getProductTypeLabel } from "~/enums/productType";
 import { useAppToast } from "~/composables/useAppToast";
@@ -147,7 +144,7 @@ const productTypes = computed(() =>
   readList(productTypesData.value).map((item) => ({
     value: item.value,
     label: getProductTypeLabel(item.value),
-  })),
+  }))
 );
 
 const filtersLoading = computed(
@@ -155,7 +152,7 @@ const filtersLoading = computed(
     teachersLoading.value ||
     studyYearsLoading.value ||
     branchesLoading.value ||
-    productTypesLoading.value,
+    productTypesLoading.value
 );
 
 const loading = computed(() => productsLoading.value || reloading.value);
@@ -168,7 +165,7 @@ const products = computed(() => {
 });
 
 const total = computed(() =>
-  Number(activePayload.value?.pagination?.total ?? products.value.length),
+  Number(activePayload.value?.pagination?.total ?? products.value.length)
 );
 
 const filtersActive = computed(() => hasActiveFilters());
@@ -207,20 +204,20 @@ watch(
   [teachersError, studyYearsError, branchesError, productTypesError],
   (errors) => {
     const error = errors.find(Boolean);
-    if (!import.meta.client || !error || filtersErrorReported) return;
+    if (!error || filtersErrorReported) return;
     filtersErrorReported = true;
     showError(messageFromFetchError(error, "تعذر تحميل خيارات التصفية."));
   },
-  { immediate: true },
+  { immediate: true }
 );
 
 watch(
   productsError,
   (error) => {
-    if (!import.meta.client || !error || listOverride.value) return;
+    if (!error || listOverride.value) return;
     showError(messageFromFetchError(error, "تعذر تحميل المنتجات."));
   },
-  { immediate: true },
+  { immediate: true }
 );
 
 const reloadProducts = async () => {
@@ -229,7 +226,7 @@ const reloadProducts = async () => {
   reloading.value = true;
   try {
     const { data, error } = await nuxtApp.runWithContext(() =>
-      PublicReservationCrud.searchProducts(buildQuery(1), { cache: false }),
+      PublicReservationCrud.searchProducts(buildQuery(1), { cache: false })
     );
     if (error.value) {
       listOverride.value = { data: [], pagination: { total: 0 } };
@@ -260,7 +257,7 @@ const loadMore = async () => {
   const nextPage = page.value + 1;
   try {
     const { data, error } = await nuxtApp.runWithContext(() =>
-      PublicReservationCrud.searchProducts(buildQuery(nextPage)),
+      PublicReservationCrud.searchProducts(buildQuery(nextPage))
     );
     if (error.value) {
       showError(messageFromFetchError(error.value, "تعذر تحميل المنتجات."));
