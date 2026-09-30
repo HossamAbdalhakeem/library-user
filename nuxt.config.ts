@@ -91,6 +91,8 @@ export default defineNuxtConfig({
     '@nuxtjs/tailwindcss',
     '@primevue/nuxt-module',
     '@vee-validate/nuxt',
+    '@nuxtjs/robots',
+    '@nuxtjs/sitemap',
     'nuxt-security',
     '@nuxt/fonts',
   ],
@@ -137,6 +139,15 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   compatibilityDate: '2024-04-03',
 
+  // Site config used by @nuxtjs/robots and @nuxtjs/sitemap.
+  site: {
+    url: process.env.NUXT_PUBLIC_SITE_URL || 'http://localhost:8001',
+  },
+  // Public catalog: crawlers may index every page.
+  robots: {
+    allow: ['/'],
+  },
+
   devServer: {
     port: 8001,
   },
@@ -144,6 +155,7 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       baseUrl: apiBaseUrl,
+      siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'http://localhost:8001',
       paymentScreenshotMaxBytes: Number(
         process.env.NUXT_PUBLIC_PAYMENT_SCREENSHOT_MAX_BYTES || 409600,
       ),

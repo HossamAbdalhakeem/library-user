@@ -1,0 +1,47 @@
+---
+description: SEO for every page — title, Open Graph, Twitter, canonical
+globs: app/pages/**/*.vue
+alwaysApply: false
+---
+
+# Page SEO
+
+Every page under [`app/pages/`](mdc:app/pages/) sets SEO in its `<script setup>`. Do not leave a new page with only UI. Copy is Arabic. The document stays `lang="ar"`.
+
+Use [`useDynamicSeo`](mdc:app/composables/useDynamicSeo.js) for the title, description, Open Graph, and Twitter card. It renders during SSR. Add a canonical link from `runtimeConfig.public.siteUrl` plus the current route. Skip the canonical tag when `siteUrl` is empty.
+
+- Static page: plain Arabic title and description, image `/library-logo.png`, `type: "website"`.
+- Detail page: title, description, and image from the loaded record (getters or refs). Pass `fallbackImage` when the main image may be a video. Set `type` to `product` or `profile` when that matches the page.
+- Title pattern: `صفحة | بكالوريا وثانوية أونلاين`.
+- Do not call `useSeoMeta` beside `useDynamicSeo` for the same fields.
+- Do not hardcode a production domain. Absolute URLs come from `NUXT_PUBLIC_SITE_URL`.
+- Do not add another site's Google verification token.
+
+```vue
+<script setup>
+const config = useRuntimeConfig();
+const route = useRoute();
+
+useDynamicSeo({
+  title: () => "حجز المنتجات | بكالوريا وثانوية أونلاين",
+  description: () => "وصف عربي قصير للصفحة.",
+  image: "/library-logo.png",
+});
+
+const canonicalUrl = computed(() => {
+  const base = config.public.siteUrl || "";
+  if (!base) return undefined;
+  try {
+    return new URL(route.fullPath, base).toString();
+  } catch {
+    return base;
+  }
+});
+
+useHead({
+  link: computed(() =>
+    canonicalUrl.value ? [{ rel: "canonical", href: canonicalUrl.value }] : [],
+  ),
+});
+</script>
+```

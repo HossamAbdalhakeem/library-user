@@ -7,7 +7,7 @@ alwaysApply: false
 
 ## Thin pages
 
-Pages only mount a feature entry — put UI in `components/pages/<feature>/`:
+Pages only mount a feature entry — put UI in `components/pages/<feature>/`. Every page also sets SEO in that same `<script setup>` ([`seo.mdc`](mdc:.cursor/rules/seo.mdc)).
 
 ```vue
 <!-- ✅ app/pages/index.vue -->
