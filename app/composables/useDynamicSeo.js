@@ -25,22 +25,21 @@ export const useDynamicSeo = (options = {}) => {
 
   const config = useRuntimeConfig();
   const route = useRoute();
+  const requestUrl = useRequestURL();
 
-  // Absolute URL of the current page (site URL + current route path)
+  // Absolute URL of the current page (request origin + current route path)
   const pageUrl = computed(() => {
-    const base = config.public.siteUrl || "";
-    if (!base) return undefined;
     try {
-      return new URL(route.fullPath, base).toString();
+      return new URL(route.fullPath, requestUrl.origin).toString();
     } catch {
-      return base;
+      return requestUrl.origin;
     }
   });
 
   // Make sure the OG image is an absolute URL (crawlers require it).
   // Social crawlers only accept real images (jpg/png/gif/webp) as og:image,
   // so any video URL is rejected and the fallbackImage is used instead.
-  // Site assets (paths starting with /) resolve against the public site URL.
+  // Site assets (paths starting with /) resolve against the current request origin.
   const VIDEO_EXT_RE = /\.(mp4|webm|ogg|ogv|mov|m4v|avi|mkv)(\?.*)?$/i;
   const absoluteImage = computed(() => {
     let img = resolveRefValue(image);
@@ -48,8 +47,8 @@ export const useDynamicSeo = (options = {}) => {
     if (!img || VIDEO_EXT_RE.test(img)) return undefined;
     if (/^https?:\/\//i.test(img)) return img;
     const base = String(img).startsWith("/")
-      ? config.public.siteUrl || ""
-      : config.public.baseUrl || config.public.siteUrl || "";
+      ? requestUrl.origin
+      : config.public.baseUrl || requestUrl.origin;
     if (!base) return undefined;
     try {
       return new URL(img, base).toString();

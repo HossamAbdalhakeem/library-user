@@ -7,8 +7,8 @@ import UserReservationsPageIndex from "~/components/pages/user-reservations/User
 
 definePageMeta({ layout: "public" });
 
-const config = useRuntimeConfig();
 const route = useRoute();
+const requestUrl = useRequestURL();
 
 useDynamicSeo({
   title: () => "حجز المنتجات | بكالوريا وثانوية أونلاين",
@@ -18,12 +18,10 @@ useDynamicSeo({
 });
 
 const canonicalUrl = computed(() => {
-  const base = config.public.siteUrl || "";
-  if (!base) return undefined;
   try {
-    return new URL(route.fullPath, base).toString();
+    return new URL(route.fullPath, requestUrl.origin).toString();
   } catch {
-    return base;
+    return requestUrl.origin;
   }
 });
 

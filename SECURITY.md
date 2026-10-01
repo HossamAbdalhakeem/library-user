@@ -13,12 +13,11 @@ npm run security:dast   # security headers against a live URL
 npm run security:check  # all three in sequence
 ```
 
-DAST needs a reachable URL:
+DAST checks `http://localhost:8000` unless you pass another URL:
 
 ```bash
-NUXT_PUBLIC_SITE_URL=https://your-frontend.example.com npm run security:dast
-# or
-npm run security:dast -- http://localhost:8000
+npm run security:dast
+npm run security:dast -- https://your-frontend.example.com
 ```
 
 CI runs SCA + SAST on every PR. DAST runs on schedule / manual workflow dispatch.

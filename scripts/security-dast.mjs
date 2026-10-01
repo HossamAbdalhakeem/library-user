@@ -3,22 +3,11 @@
  * Lightweight DAST: assert security headers on a running app URL.
  *
  * Usage:
- *   NUXT_PUBLIC_SITE_URL=https://example.com node scripts/security-dast.mjs
- *   node scripts/security-dast.mjs http://localhost:8000
+ *   node scripts/security-dast.mjs
+ *   node scripts/security-dast.mjs https://example.com
  */
 
-const target =
-  process.argv[2] ||
-  process.env.NUXT_PUBLIC_SITE_URL ||
-  process.env.SECURITY_DAST_URL ||
-  "";
-
-if (!target) {
-  console.error(
-    "security:dast — set NUXT_PUBLIC_SITE_URL or pass a URL argument.",
-  );
-  process.exit(1);
-}
+const target = process.argv[2] || "http://localhost:8000";
 
 let origin;
 try {

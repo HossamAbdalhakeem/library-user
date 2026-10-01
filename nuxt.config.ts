@@ -117,10 +117,6 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   compatibilityDate: '2024-04-03',
 
-  // Site config used by @nuxtjs/robots and @nuxtjs/sitemap.
-  site: {
-    url: process.env.NUXT_PUBLIC_SITE_URL,
-  },
   // Public catalog: crawlers may index every page.
   robots: {
     allow: ['/'],
@@ -134,10 +130,6 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       baseUrl: process.env.NUXT_ENV_BASE_URL,
-      siteUrl: process.env.NUXT_PUBLIC_SITE_URL,
-      paymentScreenshotMaxBytes: Number(
-        process.env.NUXT_PUBLIC_PAYMENT_SCREENSHOT_MAX_BYTES || 409600,
-      ),
     },
   },
 
