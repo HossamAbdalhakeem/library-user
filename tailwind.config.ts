@@ -32,8 +32,8 @@ export default <Partial<Config>>{
         },
       },
       fontFamily: {
-        sans: ['"Trebuchet MS"', '"Segoe UI"', 'sans-serif'],
-        display: ['Georgia', 'serif'],
+        sans: ['Cairo', '"Segoe UI"', 'Tahoma', 'sans-serif'],
+        display: ['Cairo', '"Segoe UI"', 'Tahoma', 'sans-serif'],
       },
       keyframes: {
         'login-orb-float': {

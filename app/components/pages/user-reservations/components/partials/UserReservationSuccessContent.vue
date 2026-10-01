@@ -11,7 +11,7 @@
     </div>
 
     <div
-      class="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-5 text-center"
+      class="rounded-[1.35rem] border border-emerald-500/30 bg-emerald-500/10 px-4 py-6 text-center"
     >
       <p class="text-xs font-medium text-[var(--app-muted)]">رقم الحجز</p>
       <p class="mt-2 break-all text-3xl font-extrabold tracking-[0.18em] text-emerald-700 dark:text-emerald-300">

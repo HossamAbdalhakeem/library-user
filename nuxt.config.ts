@@ -71,6 +71,15 @@ export default defineNuxtConfig({
     '@nuxt/fonts',
   ],
   css: ['primeicons/primeicons.css', '~/assets/css/tailwind.css'],
+  fonts: {
+    families: [
+      {
+        name: 'Cairo',
+        provider: 'google',
+        weights: [400, 500, 600, 700, 800],
+      },
+    ],
+  },
   vite: {
     optimizeDeps: {
       include: ['cropperjs'],
@@ -136,7 +145,7 @@ export default defineNuxtConfig({
    * Frontend security hardening via nuxt-security.
    * - SSR public catalog; no staff session and no auth cookies
    * - No v-html / innerHTML; no WebSockets; no iframes; no Nuxt server API routes
-   * - System fonts only (Tahoma / Segoe UI) — do not allow Google Fonts CDNs
+   * - Cairo is self-hosted by @nuxt/fonts (same origin). Do not add a Google Fonts CDN to CSP.
    * - API + signed payment proof images use NUXT_ENV_BASE_URL / https object storage
    * - HSTS + upgrade-insecure-requests only outside development (localhost is HTTP)
    */
