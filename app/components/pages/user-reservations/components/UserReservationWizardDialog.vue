@@ -22,7 +22,20 @@
         :total-amount="totalAmount"
       />
 
-      <Steps :model="steps" :active-step="activeStep" readonly />
+      <ol class="wizard-steps" aria-label="خطوات الحجز">
+        <li
+          v-for="(step, index) in steps"
+          :key="step.label"
+          class="wizard-steps__item"
+          :class="{
+            'is-active': index === activeStep,
+            'is-done': index < activeStep,
+          }"
+        >
+          <span class="wizard-steps__index">{{ step.index }}</span>
+          <span class="wizard-steps__label">{{ step.label }}</span>
+        </li>
+      </ol>
 
       <UserReservationBranchPaymentStep
         v-if="activeStep === 0"
@@ -69,7 +82,6 @@
 
 <script setup>
 import Dialog from "primevue/dialog";
-import Steps from "primevue/steps";
 import { PaymentMethod, getPaymentMethodLabel } from "~/enums/paymentMethod";
 import {
   PublicReservationCrud,
@@ -95,9 +107,9 @@ const props = defineProps({
 const emit = defineEmits(["update:visible", "submitted"]);
 
 const steps = [
-  { label: "الفرع والدفع" },
-  { label: "بيانات الطالب" },
-  { label: "المراجعة" },
+  { index: "١", label: "الفرع والدفع" },
+  { index: "٢", label: "بيانات الطالب" },
+  { index: "٣", label: "المراجعة" },
 ];
 
 const nuxtApp = useNuxtApp();
@@ -287,3 +299,66 @@ const submit = async () => {
   }
 };
 </script>
+
+<style scoped>
+.wizard-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.wizard-steps__item {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  border-radius: 999px;
+  border: 1px solid var(--app-border);
+  background: var(--app-elevated);
+  padding: 0.4rem 0.55rem;
+  color: var(--app-muted);
+}
+
+.wizard-steps__item.is-active,
+.wizard-steps__item.is-done {
+  border-color: rgb(224 154 58 / 0.45);
+  color: var(--app-text-strong);
+}
+
+.wizard-steps__index {
+  display: inline-flex;
+  width: 1.4rem;
+  height: 1.4rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--app-border);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.wizard-steps__item.is-active .wizard-steps__index,
+.wizard-steps__item.is-done .wizard-steps__index {
+  background: #e09a3a;
+  color: #1a1208;
+}
+
+.wizard-steps__label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+@media (max-width: 640px) {
+  .wizard-steps__label {
+    display: none;
+  }
+
+  .wizard-steps__item {
+    justify-content: center;
+  }
+}
+</style>

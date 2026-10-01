@@ -5,16 +5,16 @@
 /* Light scheme (default tokens when .app-dark is absent) */
 :root {
   color-scheme: light;
-  --app-bg: #f4f4f5;
-  --app-surface: #ffffff;
+  --app-bg: #f6f3ee;
+  --app-surface: #fffcf8;
   --app-card: #ffffff;
-  --app-elevated: #f4f4f5;
-  --app-border: #e4e4e7;
-  --app-border-strong: #d4d4d8;
-  --app-text: #3f3f46;
-  --app-text-strong: #18181b;
-  --app-muted: #71717a;
-  --app-muted-soft: #52525b;
+  --app-elevated: #f3eee6;
+  --app-border: #e7e0d4;
+  --app-border-strong: #d5ccbe;
+  --app-text: #443f38;
+  --app-text-strong: #1c1916;
+  --app-muted: #746b60;
+  --app-muted-soft: #5c554c;
   --app-primary: #f5af52;
   --app-primary-hover: #e09a3a;
   --app-primary-active: #bc7d2c;
@@ -27,16 +27,16 @@
 /* Dark scheme (default app mode via html.app-dark) */
 .app-dark {
   color-scheme: dark;
-  --app-bg: #000000;
-  --app-surface: #0a0a0a;
-  --app-card: #111111;
-  --app-elevated: #1a1a1a;
-  --app-border: #262626;
-  --app-border-strong: #404040;
-  --app-text: #e5e5e5;
-  --app-text-strong: #fafafa;
-  --app-muted: #a3a3a3;
-  --app-muted-soft: #d4d4d4;
+  --app-bg: #0c0b0a;
+  --app-surface: #141311;
+  --app-card: #171614;
+  --app-elevated: #221f1b;
+  --app-border: #2e2a25;
+  --app-border-strong: #433d35;
+  --app-text: #e7e1d8;
+  --app-text-strong: #faf7f2;
+  --app-muted: #a89f93;
+  --app-muted-soft: #d4cdc2;
   --app-primary: #f5af52;
   --app-primary-hover: #f6bb6a;
   --app-primary-active: #e09a3a;
@@ -60,7 +60,9 @@ body {
   margin: 0;
   background: var(--app-bg);
   color: var(--app-text);
-  font-family: "Tahoma", "Segoe UI", sans-serif;
+  font-family: "Cairo", "Segoe UI", Tahoma, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 * {
@@ -104,9 +106,15 @@ textarea {
 .p-calendar .p-inputtext,
 .p-textarea {
   width: 100%;
+  border-radius: 0.85rem !important;
   background: var(--app-surface) !important;
   border: 1px solid var(--app-border-strong) !important;
   color: var(--app-text-strong) !important;
+}
+
+.p-button {
+  border-radius: 999px !important;
+  font-weight: 700 !important;
 }
 
 .p-inputnumber {
@@ -354,6 +362,10 @@ textarea {
 .p-dialog {
   max-width: calc(100vw - 1rem) !important;
   max-height: calc(100dvh - 1rem);
+  overflow: hidden;
+  border-radius: 1.35rem !important;
+  border: 1px solid var(--app-border) !important;
+  box-shadow: 0 28px 80px rgb(0 0 0 / 0.35) !important;
 }
 
 .p-dialog .p-dialog-header {

@@ -1,13 +1,13 @@
 <template>
-  <div class="relative min-h-screen">
+  <div class="catalog-page relative min-h-screen">
     <UserReservationsHeader />
 
     <UserReservationsHero />
 
     <div
-      class="relative mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-10 sm:px-6"
+      class="relative mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-12 sm:px-6"
     >
-      <section id="catalog" class="scroll-mt-24 space-y-5">
+      <section id="catalog" class="scroll-mt-28 space-y-5">
         <UserReservationFilters
           v-model:search="search"
           v-model:teacher-id="teacherId"
@@ -31,12 +31,21 @@
           <UserReservationProductCardSkeleton v-for="index in 6" :key="index" />
         </div>
 
-        <p
+        <div
           v-else-if="!products.length"
-          class="rounded-2xl border border-dashed border-[var(--app-border)] px-4 py-16 text-center text-sm text-[var(--app-muted)]"
+          class="flex flex-col items-center rounded-[1.5rem] border border-dashed border-[var(--app-border-strong)] bg-[var(--app-card)] px-4 py-16 text-center"
         >
-          {{ emptyMessage }}
-        </p>
+          <i class="pi pi-inbox mb-3 text-3xl text-[#e09a3a]" aria-hidden="true" />
+          <p class="text-base font-bold text-[var(--app-text-strong)]">{{ emptyMessage }}</p>
+          <button
+            v-if="filtersActive"
+            type="button"
+            class="mt-4 rounded-full bg-[#e09a3a] px-4 py-2 text-sm font-bold text-[#1a1208]"
+            @click="clearFilters"
+          >
+            مسح التصفية
+          </button>
+        </div>
 
         <div v-else class="flex flex-col gap-6">
           <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -48,9 +57,10 @@
             />
           </div>
 
-          <div v-if="hasMore" class="flex justify-center">
+          <div v-if="hasMore" class="flex justify-center pt-2">
             <Button
               label="عرض المزيد"
+              outlined
               :loading="loadingMore"
               :disabled="loadingMore"
               @click="loadMore"
@@ -64,13 +74,14 @@
         :product="selectedProduct"
         @submitted="onSubmitted"
       />
-
-      <footer
-        class="pb-4 text-center text-xs leading-6 text-[var(--app-muted)]"
-      >
-        الدفع وتأكيد الحجز يتمان في الفرع
-      </footer>
     </div>
+
+    <footer class="border-t border-[var(--app-border)] px-4 py-6 text-center">
+      <p class="text-sm font-bold text-[var(--app-text-strong)]">بكالوريا وثانوية أونلاين</p>
+      <p class="mt-1 text-xs leading-6 text-[var(--app-muted)]">
+        الدفع وتأكيد الحجز يتمان في الفرع
+      </p>
+    </footer>
   </div>
 </template>
 
@@ -289,3 +300,11 @@ const onSubmitted = () => {
   selectedProduct.value = null;
 };
 </script>
+
+<style scoped>
+.catalog-page {
+  background:
+    radial-gradient(ellipse 80% 32% at 100% 0%, rgb(245 175 82 / 0.14), transparent 58%),
+    var(--app-bg);
+}
+</style>

@@ -1,59 +1,55 @@
 <template>
   <article
-    class="catalog-card group flex h-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-[var(--app-border)] bg-[var(--app-card)] text-right outline-none"
+    class="catalog-card group flex h-full flex-col overflow-hidden rounded-[1.35rem] border border-[var(--app-border)] bg-[var(--app-card)] text-right outline-none"
+    :class="{ 'is-disabled': !product.reservationAllowed }"
     role="button"
     tabindex="0"
-    @click="emit('select')"
-    @keydown.enter.prevent="emit('select')"
-    @keydown.space.prevent="emit('select')"
+    @click="onSelect"
+    @keydown.enter.prevent="onSelect"
+    @keydown.space.prevent="onSelect"
   >
-    <div class="catalog-card__media relative aspect-[16/9] overflow-hidden">
+    <div class="catalog-card__media relative aspect-[16/10] overflow-hidden">
       <img
         :src="coverSrc"
         alt=""
         class="catalog-card__photo absolute inset-0 h-full w-full object-cover"
       />
+      <span class="catalog-card__type">{{ typeLabel }}</span>
     </div>
 
     <div class="flex flex-1 flex-col gap-3 p-4">
       <div class="space-y-1">
-        <p class="text-xs font-medium text-[var(--app-muted)]">{{ typeLabel }}</p>
-        <h2 class="line-clamp-2 text-base font-bold text-[var(--app-text-strong)]">
+        <h2 class="line-clamp-2 text-lg font-extrabold leading-7 text-[var(--app-text-strong)]">
           {{ product.name }}
         </h2>
-      </div>
-      <p class="text-sm text-[var(--app-muted)]">
-        {{ product.teacherName }}
-        <span v-if="product.studyYearName && product.studyYearName !== '-'">
-          · {{ product.studyYearName }}
-        </span>
-      </p>
-
-      <div class="space-y-1.5">
-        <p class="text-xs font-medium text-[var(--app-muted)]">الفروع</p>
-        <ul v-if="branchRows.length" class="catalog-card__branches flex flex-col gap-1.5">
-          <li
-            v-for="branch in branchRows"
-            :key="branch.id"
-            class="flex items-center justify-between gap-2 rounded-lg bg-[var(--app-elevated)] px-2 py-1.5"
-          >
-            <span class="truncate text-sm text-[var(--app-text)]">{{ branch.name }}</span>
-            <span class="shrink-0 text-xs font-semibold" :class="branch.tone">
-              {{ branch.label }}
-            </span>
-          </li>
-        </ul>
-        <p v-else class="text-xs font-semibold" :class="emptyAvailability.tone">
-          {{ emptyAvailability.label }}
+        <p class="text-sm text-[var(--app-muted)]">
+          {{ product.teacherName }}
+          <span v-if="product.studyYearName && product.studyYearName !== '-'">
+            · {{ product.studyYearName }}
+          </span>
         </p>
       </div>
 
-      <div class="mt-auto flex items-center justify-between gap-3 pt-1">
-        <span class="text-sm font-semibold text-[var(--app-text-strong)]">
-          {{ product.sellingPriceLabel }}
-        </span>
-        <span class="rounded-full bg-primary-600 px-3 py-1 text-xs font-semibold text-white">
-          حجز
+      <ul v-if="branchRows.length" class="catalog-card__branches">
+        <li v-for="branch in branchRows" :key="branch.id" class="catalog-card__branch">
+          <span class="catalog-card__dot" :class="branch.tone" />
+          <span class="min-w-0 flex-1 truncate text-sm">{{ branch.name }}</span>
+          <span class="shrink-0 text-xs font-bold" :class="branch.tone">{{ branch.label }}</span>
+        </li>
+      </ul>
+      <p v-else class="text-xs font-bold" :class="emptyAvailability.tone">
+        {{ emptyAvailability.label }}
+      </p>
+
+      <div class="mt-auto flex items-end justify-between gap-3 pt-1">
+        <div>
+          <p class="text-[0.7rem] font-semibold text-[var(--app-muted)]">السعر</p>
+          <p class="text-base font-extrabold text-[var(--app-text-strong)]">
+            {{ product.sellingPriceLabel }}
+          </p>
+        </div>
+        <span class="catalog-card__action" :class="{ 'is-off': !product.reservationAllowed }">
+          {{ product.reservationAllowed ? "احجز" : "غير متاح" }}
         </span>
       </div>
     </div>
@@ -84,60 +80,139 @@ const branchRows = computed(() =>
     (branch) => {
       const inStock = Number(branch.availableQuantity) > 0;
       if (inStock) {
-        return { id: branch.id, name: branch.name, label: "متاح", tone: "text-emerald-400" };
+        return { id: branch.id, name: branch.name, label: "متاح", tone: "is-ready" };
       }
       if (props.product?.reservationAllowed) {
-        return {
-          id: branch.id,
-          name: branch.name,
-          label: "متاح للحجز",
-          tone: "text-amber-300",
-        };
+        return { id: branch.id, name: branch.name, label: "متاح للحجز", tone: "is-hold" };
       }
-      return {
-        id: branch.id,
-        name: branch.name,
-        label: "غير متوفر",
-        tone: "text-rose-300",
-      };
+      return { id: branch.id, name: branch.name, label: "غير متوفر", tone: "is-out" };
     },
   ),
 );
 
 const emptyAvailability = computed(() =>
   props.product?.reservationAllowed
-    ? { label: "متاح للحجز", tone: "text-amber-300" }
-    : { label: "غير متاح في أي فرع", tone: "text-rose-300" },
+    ? { label: "متاح للحجز", tone: "is-hold" }
+    : { label: "غير متاح في أي فرع", tone: "is-out" },
 );
+
+const onSelect = () => {
+  if (!props.product?.reservationAllowed) return;
+  emit("select");
+};
 </script>
 
 <style scoped>
 .catalog-card {
+  cursor: pointer;
+  box-shadow: 0 16px 40px -32px rgb(0 0 0 / 0.55);
   transition:
-    border-color 420ms ease,
-    box-shadow 520ms ease;
+    transform 280ms ease,
+    border-color 280ms ease,
+    box-shadow 280ms ease;
+}
+
+.catalog-card.is-disabled {
+  cursor: default;
 }
 
 .catalog-card:hover,
 .catalog-card:focus-visible {
-  border-color: #f5af52;
-  box-shadow:
-    0 0 0 1px #f5af52,
-    0 18px 36px color-mix(in srgb, #f5af52 22%, transparent);
+  transform: translateY(-4px);
+  border-color: rgb(245 175 82 / 0.55);
+  box-shadow: 0 22px 44px -28px rgb(224 154 58 / 0.55);
+}
+
+.catalog-card.is-disabled:hover,
+.catalog-card.is-disabled:focus-visible {
+  transform: none;
+  border-color: var(--app-border);
+  box-shadow: 0 16px 40px -32px rgb(0 0 0 / 0.55);
 }
 
 .catalog-card__photo {
-  transform: scale(1.12);
-  transition: transform 720ms cubic-bezier(0.22, 1, 0.36, 1);
+  transform: scale(1.04);
+  transition: transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .catalog-card:hover .catalog-card__photo,
 .catalog-card:focus-visible .catalog-card__photo {
-  transform: scale(1) translate3d(-3%, 0, 0);
+  transform: scale(1.1);
+}
+
+.catalog-card.is-disabled:hover .catalog-card__photo {
+  transform: scale(1.04);
+}
+
+.catalog-card__type {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  border-radius: 999px;
+  background: rgb(12 11 10 / 0.62);
+  padding: 0.2rem 0.65rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #faf7f2;
+  backdrop-filter: blur(10px);
 }
 
 .catalog-card__branches {
-  max-height: 7.5rem;
-  overflow-y: auto;
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.catalog-card__branch {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.catalog-card__dot {
+  width: 0.4rem;
+  height: 0.4rem;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+.is-ready {
+  color: #059669;
+}
+
+.is-hold {
+  color: #d97706;
+}
+
+.is-out {
+  color: #e11d48;
+}
+
+:global(.app-dark) .is-ready {
+  color: #6ee7b7;
+}
+
+:global(.app-dark) .is-hold {
+  color: #fcd34d;
+}
+
+:global(.app-dark) .is-out {
+  color: #fda4af;
+}
+
+.catalog-card__action {
+  border-radius: 999px;
+  background: #e09a3a;
+  padding: 0.4rem 0.85rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #1a1208;
+}
+
+.catalog-card__action.is-off {
+  background: var(--app-elevated);
+  color: var(--app-muted);
 }
 </style>

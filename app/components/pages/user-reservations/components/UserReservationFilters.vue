@@ -1,8 +1,8 @@
 <template>
-  <div class="space-y-5">
+  <div class="space-y-4">
     <div class="flex flex-wrap items-end justify-between gap-3 text-right">
       <div>
-        <h2 class="text-xl font-bold text-[var(--app-text-strong)]">
+        <h2 class="text-2xl font-extrabold text-[var(--app-text-strong)]">
           المنتجات المتاحة
         </h2>
         <p class="mt-1 text-sm text-[var(--app-muted)]">
@@ -12,16 +12,14 @@
       <button
         v-if="filtersActive"
         type="button"
-        class="text-sm font-semibold text-primary-700 hover:underline dark:text-primary-300"
+        class="rounded-full border border-[var(--app-border-strong)] px-3 py-1.5 text-sm font-bold text-[var(--app-text-strong)] transition hover:border-[#e09a3a]"
         @click="emit('clear')"
       >
         مسح التصفية
       </button>
     </div>
 
-    <div
-      class="grid gap-3 rounded-2xl border border-[var(--app-border)] bg-[var(--app-card)] p-4 md:grid-cols-2 xl:grid-cols-3"
-    >
+    <div class="filters">
       <AppSearchInput
         v-model="search"
         label="بحث"
@@ -31,67 +29,69 @@
         @search="emit('search', $event)"
       />
 
-      <div class="flex flex-col gap-2 text-right">
-        <label class="text-sm font-medium">المدرس</label>
-        <Select
-          v-model="teacherId"
-          :options="teachers"
-          option-label="name"
-          option-value="id"
-          placeholder="كل المدرسين"
-          show-clear
-          filter
-          class="w-full"
-          :loading="filtersLoading"
-          @update:model-value="emit('change')"
-        />
-      </div>
+      <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div class="flex flex-col gap-2 text-right">
+          <label class="filters__label">المدرس</label>
+          <Select
+            v-model="teacherId"
+            :options="teachers"
+            option-label="name"
+            option-value="id"
+            placeholder="كل المدرسين"
+            show-clear
+            filter
+            class="w-full"
+            :loading="filtersLoading"
+            @update:model-value="emit('change')"
+          />
+        </div>
 
-      <div class="flex flex-col gap-2 text-right">
-        <label class="text-sm font-medium">السنة الدراسية</label>
-        <Select
-          v-model="studyYearId"
-          :options="studyYears"
-          option-label="name"
-          option-value="id"
-          placeholder="كل السنوات"
-          show-clear
-          filter
-          class="w-full"
-          :loading="filtersLoading"
-          @update:model-value="emit('change')"
-        />
-      </div>
+        <div class="flex flex-col gap-2 text-right">
+          <label class="filters__label">السنة الدراسية</label>
+          <Select
+            v-model="studyYearId"
+            :options="studyYears"
+            option-label="name"
+            option-value="id"
+            placeholder="كل السنوات"
+            show-clear
+            filter
+            class="w-full"
+            :loading="filtersLoading"
+            @update:model-value="emit('change')"
+          />
+        </div>
 
-      <div class="flex flex-col gap-2 text-right">
-        <label class="text-sm font-medium">الفرع</label>
-        <Select
-          v-model="branchId"
-          :options="branches"
-          option-label="name"
-          option-value="id"
-          placeholder="كل الفروع"
-          show-clear
-          filter
-          class="w-full"
-          :loading="filtersLoading"
-          @update:model-value="emit('change')"
-        />
-      </div>
+        <div class="flex flex-col gap-2 text-right">
+          <label class="filters__label">الفرع</label>
+          <Select
+            v-model="branchId"
+            :options="branches"
+            option-label="name"
+            option-value="id"
+            placeholder="كل الفروع"
+            show-clear
+            filter
+            class="w-full"
+            :loading="filtersLoading"
+            @update:model-value="emit('change')"
+          />
+        </div>
 
-      <div class="flex flex-col gap-2 text-right">
-        <label class="text-sm font-medium">النوع</label>
-        <Select
-          v-model="productType"
-          :options="productTypes"
-          option-label="label"
-          option-value="value"
-          placeholder="كل الأنواع"
-          show-clear
-          class="w-full"
-          :loading="filtersLoading"
-          @update:model-value="emit('change')"
-        />
+        <div class="flex flex-col gap-2 text-right">
+          <label class="filters__label">النوع</label>
+          <Select
+            v-model="productType"
+            :options="productTypes"
+            option-label="label"
+            option-value="value"
+            placeholder="كل الأنواع"
+            show-clear
+            class="w-full"
+            :loading="filtersLoading"
+            @update:model-value="emit('change')"
+          />
+        </div>
       </div>
     </div>
   </div>
@@ -122,3 +122,22 @@ const productType = defineModel("productType", { default: null });
 
 const emit = defineEmits(["search", "change", "clear"]);
 </script>
+
+<style scoped>
+.filters {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  border-radius: 1.5rem;
+  border: 1px solid var(--app-border);
+  background: color-mix(in srgb, var(--app-card) 92%, transparent);
+  padding: 1rem;
+  box-shadow: 0 18px 40px -32px rgb(0 0 0 / 0.45);
+}
+
+.filters__label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--app-muted);
+}
+</style>
