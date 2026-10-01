@@ -13,11 +13,9 @@
           v-model:teacher-id="teacherId"
           v-model:study-year-id="studyYearId"
           v-model:branch-id="branchId"
-          v-model:product-type="productType"
           :teachers="teachers"
           :study-years="studyYears"
           :branches="branches"
-          :product-types="productTypes"
           :filters-loading="filtersLoading"
           :filters-active="filtersActive"
           :loading="loading"
@@ -89,7 +87,6 @@
 import Button from "primevue/button";
 import { PublicReservationCrud, readList } from "~/services/public-reservation";
 import { normalizeBookSearchItem } from "~/services/book";
-import { getProductTypeLabel } from "~/enums/productType";
 import { useAppToast } from "~/composables/useAppToast";
 import { messageFromFetchError } from "~/utils/api-errors/messages";
 import UserReservationFilters from "./components/UserReservationFilters.vue";
@@ -107,7 +104,6 @@ const search = ref("");
 const teacherId = ref(null);
 const studyYearId = ref(null);
 const branchId = ref(null);
-const productType = ref(null);
 const PAGE_SIZE = 15;
 
 const loadingMore = ref(false);
@@ -135,11 +131,6 @@ const {
   error: branchesError,
 } = PublicReservationCrud.getBranches();
 const {
-  data: productTypesData,
-  loading: productTypesLoading,
-  error: productTypesError,
-} = PublicReservationCrud.getProductTypes();
-const {
   data: productsData,
   loading: productsLoading,
   error: productsError,
@@ -151,19 +142,12 @@ const {
 const teachers = computed(() => readList(teachersData.value));
 const studyYears = computed(() => readList(studyYearsData.value));
 const branches = computed(() => readList(branchesData.value));
-const productTypes = computed(() =>
-  readList(productTypesData.value).map((item) => ({
-    value: item.value,
-    label: getProductTypeLabel(item.value),
-  }))
-);
 
 const filtersLoading = computed(
   () =>
     teachersLoading.value ||
     studyYearsLoading.value ||
-    branchesLoading.value ||
-    productTypesLoading.value
+    branchesLoading.value
 );
 
 const loading = computed(() => productsLoading.value || reloading.value);
@@ -192,8 +176,7 @@ const hasActiveFilters = () =>
     String(search.value || "").trim() ||
       teacherId.value ||
       studyYearId.value ||
-      branchId.value ||
-      productType.value
+      branchId.value
   );
 
 const buildQuery = (pageNumber = 1) => {
@@ -205,14 +188,13 @@ const buildQuery = (pageNumber = 1) => {
     ...(teacherId.value ? { teacherId: teacherId.value } : {}),
     ...(studyYearId.value ? { studyYearId: studyYearId.value } : {}),
     ...(branchId.value ? { branchId: branchId.value } : {}),
-    ...(productType.value ? { type: productType.value } : {}),
   };
 };
 
 let filtersErrorReported = false;
 
 watch(
-  [teachersError, studyYearsError, branchesError, productTypesError],
+  [teachersError, studyYearsError, branchesError],
   (errors) => {
     const error = errors.find(Boolean);
     if (!error || filtersErrorReported) return;
@@ -258,7 +240,6 @@ const clearFilters = () => {
   teacherId.value = null;
   studyYearId.value = null;
   branchId.value = null;
-  productType.value = null;
   reloadProducts();
 };
 

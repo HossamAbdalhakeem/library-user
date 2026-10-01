@@ -62,9 +62,6 @@ export class PublicReservationCrud {
     });
   }
 
-// https://library-management-backend-production-3798.up.railway.app/app-api/products/search?page=1&per_page=15
-  
-// https://library-management-backend-production-3798.up.railway.app/app-api/product-types
   /** GET /app-api/teachers */
   static getTeachers(params = {}) {
     return call({
@@ -78,15 +75,6 @@ export class PublicReservationCrud {
   static getBranches(params = {}) {
     return call({
       endpoint: "/app-api/branches",
-      method: "GET",
-      params,
-    });
-  }
-
-  /** GET /app-api/product-types */
-  static getProductTypes(params = {}) {
-    return call({
-      endpoint: "/app-api/product-types",
       method: "GET",
       params,
     });

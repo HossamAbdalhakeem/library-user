@@ -5,7 +5,6 @@ export {
 } from "./api/public-reservation.api";
 export type {
   AppCatalogOption,
-  AppProductTypeOption,
   CreatePublicReservationPayload,
   PublicProductSearchQuery,
   PublicReservationResponse,

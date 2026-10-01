@@ -29,7 +29,7 @@
         @search="emit('search', $event)"
       />
 
-      <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         <div class="flex flex-col gap-2 text-right">
           <label class="filters__label">المدرس</label>
           <Select
@@ -77,21 +77,6 @@
             @update:model-value="emit('change')"
           />
         </div>
-
-        <div class="flex flex-col gap-2 text-right">
-          <label class="filters__label">النوع</label>
-          <Select
-            v-model="productType"
-            :options="productTypes"
-            option-label="label"
-            option-value="value"
-            placeholder="كل الأنواع"
-            show-clear
-            class="w-full"
-            :loading="filtersLoading"
-            @update:model-value="emit('change')"
-          />
-        </div>
       </div>
     </div>
   </div>
@@ -107,7 +92,6 @@ defineProps({
   teachers: { type: Array, default: () => [] },
   studyYears: { type: Array, default: () => [] },
   branches: { type: Array, default: () => [] },
-  productTypes: { type: Array, default: () => [] },
   filtersLoading: { type: Boolean, default: false },
   filtersActive: { type: Boolean, default: false },
   loading: { type: Boolean, default: false },
@@ -118,7 +102,6 @@ const search = defineModel("search", { type: String, default: "" });
 const teacherId = defineModel("teacherId", { default: null });
 const studyYearId = defineModel("studyYearId", { default: null });
 const branchId = defineModel("branchId", { default: null });
-const productType = defineModel("productType", { default: null });
 
 const emit = defineEmits(["search", "change", "clear"]);
 </script>

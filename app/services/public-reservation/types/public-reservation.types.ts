@@ -8,16 +8,11 @@ export type AppCatalogOption = {
   name: string;
 };
 
-export type AppProductTypeOption = {
-  value: string;
-};
-
 /** GET /app-api/products/search query. */
 export type PublicProductSearchQuery = {
   page?: number;
   per_page?: number;
   product?: string;
-  type?: string;
   teacherId?: string;
   branchId?: string;
   studyYearId?: string;
